@@ -269,7 +269,7 @@ El catálogo público no requiere autenticación.
 
 ---
 
-# 📡 Endpoints Principales
+#  Endpoints Principales
 
 ## Productos
 
