@@ -93,7 +93,7 @@ La plataforma está compuesta por 5 microservicios principales:
 
 #  Estructura del Proyecto
 
-```
+```text
 project-root/
 │
 ├── gateway-service/
