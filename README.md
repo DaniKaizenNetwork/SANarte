@@ -193,7 +193,7 @@ CATEGORIA (1) ─────────── (N) PRODUCTO
 
 ---
 
-# 🧠 Decisiones Arquitectónicas
+#  Decisiones Arquitectónicas
 
 ## Arquitectura basada en microservicios
 
