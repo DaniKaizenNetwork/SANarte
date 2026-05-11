@@ -67,6 +67,7 @@ La plataforma está compuesta por 5 microservicios principales:
                  │ producto         │
                  └──────────────────┘
 ---
+---
 
 #  Tecnologías Utilizadas
 
