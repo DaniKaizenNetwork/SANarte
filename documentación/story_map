@@ -1,0 +1,98 @@
+# Story Map — Plataforma Web de Artesanías
+
+Este documento organiza las funcionalidades del sistema desde la perspectiva del usuario, estructurando el flujo de trabajo y priorizando las entregas por fases.
+
+---
+
+## Usuarios del Sistema
+
+* **Usuario Cliente:** Persona que navega por las artesanías y contacta por WhatsApp.
+* **Usuario Administrador:** Persona encargada de gestionar productos y categorías.
+
+---
+
+## Visualización del Story Map
+
+### 🛒 Usuario Cliente
+**Actividad: Explorar Catálogo**
+* **Tarea: Ver productos**
+    * HU-002: Consultar catálogo
+    * Mostrar imágenes, precios y categorías
+* **Tarea: Filtrar productos**
+    * HU-005: Filtrar por categoría
+    * Limpiar filtros
+* **Tarea: Ver detalle producto**
+    * HU-007: Visualizar detalle
+    * Ver descripción, estado e imagen ampliada
+* **Tarea: Contactar vendedor**
+    * Abrir WhatsApp con mensaje predefinido
+
+### ⚙️ Usuario Administrador
+**Actividad: Gestionar Productos**
+* **Tarea: Crear producto**
+    * HU-001: Crear producto (Precio, Categoría, Imagen)
+* **Tarea: Editar producto**
+    * HU-003: Editar producto (Modificar precio, estado, detalle)
+* **Tarea: Eliminar producto**
+    * HU-004: Eliminar producto
+* **Tarea: Listar productos**
+    * Buscar productos y verificar estados
+
+**Actividad: Gestionar Categorías**
+* **Tarea: Operaciones CRUD**
+    * HU-006: Gestión de categorías (Crear, Editar, Eliminar, Listar)
+
+---
+
+## Plan de Lanzamiento (Releases)
+
+### 🚀 Release 1 — MVP (Producto Mínimo Viable)
+*Objetivo: Publicar artesanías y permitir contacto directo.*
+* **Cliente:** Ver catálogo, ver detalle, contactar por WhatsApp.
+* **Administrador:** CRUD básico de productos (Crear, Editar, Eliminar).
+
+### 📦 Release 2 — Organización y Filtros
+*Objetivo: Mejorar la navegación y clasificación.*
+* Gestión completa de categorías.
+* Filtrado por categorías en el catálogo.
+* Control de estados (Disponible / Agotado).
+
+### ✨ Release 3 — Optimización UX/UI
+*Objetivo: Pulir la experiencia de usuario.*
+* Diseño Responsivo avanzado.
+* Búsqueda de productos por texto.
+* Mejoras visuales y optimización de carga.
+
+---
+
+## Priorización de Funcionalidades
+
+| Prioridad | Funcionalidad |
+| :--- | :--- |
+| **Alta** | Ver catálogo, CRUD productos, Contacto WhatsApp |
+| **Media** | Gestión de categorías, Filtros |
+| **Baja** | Búsqueda avanzada, Productos destacados |
+
+---
+
+## Mapeo Tecnológico (Microservicios)
+
+| Componente | Responsabilidad |
+| :--- | :--- |
+| **Admin Service** | Gestión de persistencia (CRUD) de productos y categorías. |
+| **Public Service** | Consultas optimizadas de catálogo para el cliente. |
+| **Frontend Usuario** | Interfaz en Angular para el catálogo público. |
+| **Frontend Admin** | Panel administrativo en Angular para gestión. |
+| **API Gateway** | Punto único de entrada y seguridad centralizada. |
+
+---
+
+## Vista Scrum (Backbone)
+
+1.  **Backbone:** Explorar catálogo → Gestionar productos → Gestionar categorías → Contactar vendedor.
+2.  **Walking Skeleton (MVP):** Ver lista de productos → CRUD básico → Botón WhatsApp.
+3.  **Crecimiento:** Filtros dinámicos → Gestión de categorías → UI Premium.
+
+## trello
+
+https://trello.com/invite/b/68e54546090f3526163a7063/ATTIdf1fc6256f3632551101c52cb505313332EA81A6/sanarte
