@@ -76,7 +76,6 @@ La plataforma está compuesta por 5 microservicios principales:
 - Spring Boot 3
 - Spring Data JPA
 - Spring Security
-- JWT
 - Spring Cloud Gateway
 
 ## Frontend
