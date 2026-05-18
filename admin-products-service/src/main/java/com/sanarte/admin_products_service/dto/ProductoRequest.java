@@ -1,7 +1,10 @@
 package com.sanarte.admin_products_service.dto;
 
 import com.sanarte.admin_products_service.domain.EstadoProducto;
-import jakarta.validation.constraints.*;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+
 import java.math.BigDecimal;
 
 public record ProductoRequest(

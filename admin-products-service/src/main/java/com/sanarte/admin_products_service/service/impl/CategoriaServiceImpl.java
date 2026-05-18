@@ -1,7 +1,5 @@
 package com.sanarte.admin_products_service.service.impl;
 
-
-
 import com.sanarte.admin_products_service.domain.Categoria;
 import com.sanarte.admin_products_service.dto.CategoriaRequest;
 import com.sanarte.admin_products_service.dto.CategoriaResponse;
