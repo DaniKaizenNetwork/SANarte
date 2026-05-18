@@ -1,0 +1,246 @@
+{
+  "info": {
+    "name": "SANarte API",
+    "_postman_id": "8c5b2c55-1111-4444-9999-sanarte",
+    "description": "Colección de endpoints para SANarte",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Categorias",
+      "item": [
+        {
+          "name": "Crear Categoria",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Tejidos\",\n  \"descripcion\": \"Productos tejidos a mano\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/admin/categorias",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "admin",
+                "categorias"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Listar Categorias",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:8080/api/admin/categorias",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "admin",
+                "categorias"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Buscar Categoria Por ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:8080/api/admin/categorias/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "admin",
+                "categorias",
+                "1"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Actualizar Categoria",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Tejidos Premium\",\n  \"descripcion\": \"Categoría actualizada\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/admin/categorias/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "admin",
+                "categorias",
+                "1"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Eliminar Categoria",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "http://localhost:8080/api/admin/categorias/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "admin",
+                "categorias",
+                "1"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Productos",
+      "item": [
+        {
+          "name": "Crear Producto",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Bolso artesanal\",\n  \"detalle\": \"Bolso hecho a mano\",\n  \"precio\": 85000,\n  \"imagenUrl\": \"https://imagenes.com/bolso.jpg\",\n  \"estado\": \"DISPONIBLE\",\n  \"idCategoria\": 1\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/admin/productos",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "admin",
+                "productos"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Listar Productos",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:8080/api/admin/productos",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "admin",
+                "productos"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Listar Productos Publicos",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:8080/api/public/productos",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "public",
+                "productos"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Buscar Producto Publico Por ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:8080/api/public/productos/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "public",
+                "productos",
+                "1"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Filtrar Productos Por Categoria",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:8080/api/public/productos/categoria/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "public",
+                "productos",
+                "categoria",
+                "1"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
