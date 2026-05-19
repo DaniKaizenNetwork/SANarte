@@ -40,6 +40,13 @@ services:
     depends_on:
       - admin-products-service
       - public-products-service
+    environment:
+      SPRING_CLOUD_GATEWAY_ROUTES_0_ID: admin-products-service
+      SPRING_CLOUD_GATEWAY_ROUTES_0_URI: http://admin-products-service:8081
+      SPRING_CLOUD_GATEWAY_ROUTES_0_PREDICATES_0: Path=/api/admin/**
+      SPRING_CLOUD_GATEWAY_ROUTES_1_ID: public-products-service
+      SPRING_CLOUD_GATEWAY_ROUTES_1_URI: http://public-products-service:8082
+      SPRING_CLOUD_GATEWAY_ROUTES_1_PREDICATES_0: Path=/api/public/**
     networks:
       - backend-network
 
