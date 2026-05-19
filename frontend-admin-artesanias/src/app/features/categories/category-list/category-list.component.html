@@ -1,0 +1,168 @@
+<section class="categories-page">
+
+  <header class="categories-page__header">
+
+    <div>
+      <h2 class="page-title">
+        Categories
+      </h2>
+
+      <p class="page-subtitle">
+        Organiza tus artesanías por tipo, técnica o colección.
+      </p>
+    </div>
+
+    <a
+      class="btn btn-primary categories-page__new"
+      routerLink="/categorias/nueva"
+    >
+      <lucide-icon
+        [img]="plusIcon"
+        size="20"
+        strokeWidth="2.4"
+        aria-hidden="true"
+      />
+      Nueva Categoría
+    </a>
+
+  </header>
+
+  <div class="categories-page__toolbar">
+
+
+
+  </div>
+
+  @if (errorMessage()) {
+    <p class="categories-page__alert" role="alert">
+      {{ errorMessage() }}
+    </p>
+  }
+
+  @if (loading()) {
+
+    <div class="categories-page__loading">
+      Cargando categorías...
+    </div>
+
+  } @else {
+
+    <div class="categories-page__table-card">
+
+      <table class="categories-table">
+
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Categoría</th>
+            <th>Descripción</th>
+            <th class="categories-table__actions-header">
+              Acciones
+            </th>
+          </tr>
+        </thead>
+
+        <tbody>
+
+          @for (category of filteredCategories(); track category.idCategoria) {
+
+            <tr>
+
+              <td>
+                <span class="categories-table__id">
+                  CAT-{{ category.idCategoria }}
+                </span>
+              </td>
+
+              <td>
+                <div class="categories-table__category">
+                  <span class="categories-table__icon">
+                    <lucide-icon
+                      [img]="tagsIcon"
+                      size="22"
+                      strokeWidth="2.2"
+                      aria-hidden="true"
+                    />
+                  </span>
+
+                  <strong>
+                    {{ category.nombre }}
+                  </strong>
+                </div>
+              </td>
+
+              <td>
+                <p class="categories-table__description">
+                  {{ category.descripcion }}
+                </p>
+              </td>
+
+              <td>
+                <div class="categories-table__actions">
+
+                  <a
+                    class="categories-table__edit"
+                    [routerLink]="['/categorias', category.idCategoria, 'editar']"
+                    aria-label="Editar categoría"
+                  >
+                    <lucide-icon
+                      [img]="editIcon"
+                      size="19"
+                      strokeWidth="2.2"
+                      aria-hidden="true"
+                    />
+                    Editar
+                  </a>
+
+                  <button
+                    type="button"
+                    class="categories-table__delete"
+                    (click)="deleteCategory(category)"
+                    aria-label="Eliminar categoría"
+                  >
+                    <lucide-icon
+                      [img]="trashIcon"
+                      size="19"
+                      strokeWidth="2.2"
+                      aria-hidden="true"
+                    />
+                    Eliminar
+                  </button>
+
+                </div>
+              </td>
+
+            </tr>
+
+          } @empty {
+
+            <tr>
+              <td colspan="4">
+                <div class="categories-page__empty">
+                  <h3>No hay categorías registradas</h3>
+
+                  <p>
+                    Crea una categoría para organizar mejor tus productos artesanales.
+                  </p>
+
+                  <a
+                    class="btn btn-primary"
+                    routerLink="/categorias/nueva"
+                  >
+                    Crear categoría
+                  </a>
+                </div>
+              </td>
+            </tr>
+
+          }
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+  }
+
+</section>

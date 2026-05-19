@@ -1,0 +1,146 @@
+/* You can add global styles to this file, and also import other style files */
+:root {
+  --color-bg: #fbfaf7;
+  --color-surface: #fffdf9;
+  --color-sidebar: #f3f1ed;
+  --color-border: #e4d8d0;
+  --color-primary: #965336;
+  --color-primary-dark: #743b24;
+  --color-text: #201c19;
+  --color-muted: #756b64;
+  --color-success: #17b889;
+  --color-warning: #f6a31a;
+
+  --shadow-soft: 0 22px 55px rgba(69, 43, 28, 0.08);
+
+  --sidebar-width: 292px;
+  --topbar-height: 92px;
+
+  --font-serif: 'Cormorant Garamond', Georgia, serif;
+  --font-sans: 'Montserrat', system-ui, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.page-title {
+  font-family: var(--font-serif);
+  font-size: clamp(3rem, 5vw, 4.9rem);
+  line-height: 0.95;
+  margin: 0 0 1rem;
+  letter-spacing: -1.5px;
+}
+
+.page-subtitle {
+  margin: 0;
+  color: #4c4039;
+  font-size: 1.35rem;
+  line-height: 1.55;
+}
+
+.form-card {
+  width: min(100%, 1070px);
+  background: var(--color-surface);
+  border: 1px solid #eee6df;
+  border-radius: 16px;
+  box-shadow: var(--shadow-soft);
+  padding: clamp(1.5rem, 4vw, 3.6rem);
+}
+
+.form-label {
+  display: block;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-size: 0.87rem;
+  color: #342722;
+  margin-bottom: 0.65rem;
+}
+
+.form-control {
+  width: 100%;
+  min-height: 58px;
+  border: 1px solid var(--color-border);
+  background: #fffdf9;
+  color: var(--color-text);
+  padding: 0 1.2rem;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.form-control:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 4px rgba(150, 83, 54, 0.12);
+}
+
+textarea.form-control {
+  padding-top: 1rem;
+  resize: vertical;
+  min-height: 170px;
+}
+
+.form-error {
+  display: block;
+  color: #9d2d20;
+  margin-top: 0.5rem;
+  font-size: 0.86rem;
+}
+
+.btn {
+  border: 1px solid transparent;
+  min-height: 52px;
+  padding: 0 2rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  border-radius: 10px;
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+}
+
+.btn-primary {
+  background: var(--color-primary);
+  color: white;
+}
+
+.btn-primary:hover {
+  background: var(--color-primary-dark);
+}
+
+.btn-outline {
+  background: transparent;
+  border-color: #8f7b70;
+  color: var(--color-text);
+}

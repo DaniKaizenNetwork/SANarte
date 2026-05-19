@@ -1,0 +1,258 @@
+<section class="product-form-page">
+
+  <header class="product-form-page__header">
+
+    <div>
+      <h2 class="page-title">
+        {{ title }}
+      </h2>
+
+      <p class="page-subtitle">
+        {{ subtitle }}
+      </p>
+    </div>
+
+    <a
+      class="product-form-page__back"
+      routerLink="/productos"
+    >
+      <lucide-icon
+        [img]="arrowLeftIcon"
+        size="20"
+        strokeWidth="2.4"
+        aria-hidden="true"
+      />
+      Volver
+    </a>
+
+  </header>
+
+  @if (isLoading) {
+    <div class="product-form-page__loading">
+      Cargando producto...
+    </div>
+  } @else {
+
+    <form
+      class="product-form form-card"
+      [formGroup]="form"
+      (ngSubmit)="submit()"
+      novalidate
+    >
+
+      @if (errorMessage) {
+        <p class="product-form__alert" role="alert">
+          {{ errorMessage }}
+        </p>
+      }
+
+      <div class="product-form__grid product-form__grid--two">
+
+        <div class="product-form__field">
+          <label class="form-label" for="product-id">
+            ID Producto
+          </label>
+
+          <input
+            id="product-id"
+            class="form-control"
+            [value]="isEditMode ? 'PRD-' + productId : 'Se genera automáticamente'"
+            readonly
+          />
+        </div>
+
+        <div class="product-form__field">
+          <label class="form-label" for="estado">
+            Estado del Producto
+          </label>
+
+          <select
+            id="estado"
+            class="form-control"
+            formControlName="estado"
+            [class.form-control--error]="isInvalid('estado')"
+          >
+            <option value="DISPONIBLE">
+              Disponible
+            </option>
+
+            <option value="AGOTADO">
+              Agotado
+            </option>
+          </select>
+
+          @if (isInvalid('estado')) {
+            <span class="form-error">
+              Selecciona un estado válido.
+            </span>
+          }
+        </div>
+
+      </div>
+
+      <div class="product-form__field">
+        <label class="form-label" for="nombre">
+          Nombre del Producto *
+        </label>
+
+        <input
+          id="nombre"
+          class="form-control product-form__title-input"
+          formControlName="nombre"
+          placeholder="Ej. Vasija de Barro Bruñido"
+          [class.form-control--error]="isInvalid('nombre')"
+        />
+
+        @if (isInvalid('nombre')) {
+          <span class="form-error">
+            El nombre del producto es obligatorio.
+          </span>
+        }
+      </div>
+
+      <div class="product-form__grid product-form__grid--two">
+
+        <div class="product-form__field">
+          <label class="form-label" for="precio">
+            Precio *
+          </label>
+
+          <input
+            id="precio"
+            class="form-control"
+            type="number"
+            min="1"
+            formControlName="precio"
+            placeholder="$ 0"
+            [class.form-control--error]="isInvalid('precio')"
+          />
+
+          @if (isInvalid('precio')) {
+            <span class="form-error">
+              El precio debe ser mayor a cero.
+            </span>
+          }
+        </div>
+
+        <div class="product-form__field">
+          <label class="form-label" for="categoria">
+            Categoría *
+          </label>
+
+          <select
+            id="categoria"
+            class="form-control"
+            formControlName="idCategoria"
+            [class.form-control--error]="isInvalid('idCategoria')"
+          >
+            <option [ngValue]="0">
+              Selecciona una categoría
+            </option>
+
+            @for (category of categories$ | async; track category.idCategoria) {
+              <option [ngValue]="category.idCategoria">
+                {{ category.nombre }}
+              </option>
+            }
+          </select>
+
+          @if (isInvalid('idCategoria')) {
+            <span class="form-error">
+              Debes seleccionar una categoría.
+            </span>
+          }
+        </div>
+
+      </div>
+
+      <div class="product-form__field">
+        <label class="form-label" for="detalle">
+          Detalle / Descripción *
+        </label>
+
+        <textarea
+          id="detalle"
+          class="form-control"
+          formControlName="detalle"
+          placeholder="Describe los materiales, técnica, origen y características de la pieza..."
+          [class.form-control--error]="isInvalid('detalle')"
+        ></textarea>
+
+        @if (isInvalid('detalle')) {
+          <span class="form-error">
+            El detalle del producto es obligatorio.
+          </span>
+        }
+      </div>
+
+      <div class="product-form__field">
+        <label class="form-label" for="imagenUrl">
+          Imagen del Producto
+        </label>
+
+        <div class="product-form__upload">
+
+          <div class="product-form__upload-icon">
+            <lucide-icon
+              [img]="imagePlusIcon"
+              size="34"
+              strokeWidth="2.1"
+              aria-hidden="true"
+            />
+          </div>
+
+          <strong>
+            Haz clic para subir o arrastra la imagen aquí
+          </strong>
+
+          <span>
+            JPG, PNG o WEBP de alta resolución. Máximo 5MB.
+          </span>
+
+          <div class="product-form__separator">
+            <span></span>
+            O USA UNA URL
+            <span></span>
+          </div>
+
+          <input
+            id="imagenUrl"
+            class="form-control"
+            formControlName="imagenUrl"
+            placeholder="https://ejemplo.com/imagen.jpg"
+          />
+
+        </div>
+      </div>
+
+      <footer class="product-form__actions">
+
+        <a
+          class="btn btn-outline"
+          routerLink="/productos"
+        >
+          Cancelar
+        </a>
+
+        <button
+          class="btn btn-primary"
+          type="submit"
+          [disabled]="isSaving"
+        >
+          <lucide-icon
+            [img]="saveIcon"
+            size="20"
+            strokeWidth="2.4"
+            aria-hidden="true"
+          />
+
+          {{ isEditMode ? 'Guardar Cambios' : 'Guardar Producto' }}
+        </button>
+
+      </footer>
+
+    </form>
+
+  }
+
+</section>

@@ -1,0 +1,146 @@
+<section class="category-form-page">
+
+  <header class="category-form-page__header">
+
+    <div>
+      <h2 class="page-title">
+        {{ title }}
+      </h2>
+
+      <p class="page-subtitle">
+        {{ subtitle }}
+      </p>
+    </div>
+
+    <a
+      class="category-form-page__back"
+      routerLink="/categorias"
+    >
+      <lucide-icon
+        [img]="arrowLeftIcon"
+        size="20"
+        strokeWidth="2.4"
+        aria-hidden="true"
+      />
+      Volver
+    </a>
+
+  </header>
+
+  @if (isLoading) {
+
+    <div class="category-form-page__loading">
+      Cargando categoría...
+    </div>
+
+  } @else {
+
+    <form
+      class="category-form form-card"
+      [formGroup]="form"
+      (ngSubmit)="submit()"
+      novalidate
+    >
+
+      @if (errorMessage) {
+        <p class="category-form__alert" role="alert">
+          {{ errorMessage }}
+        </p>
+      }
+
+      <div class="category-form__icon-box" aria-hidden="true">
+        <lucide-icon
+          [img]="tagsIcon"
+          size="38"
+          strokeWidth="2.1"
+        />
+      </div>
+
+      <div class="category-form__field">
+        <label class="form-label" for="category-id">
+          ID Categoría
+        </label>
+
+        <input
+          id="category-id"
+          class="form-control"
+          [value]="isEditMode ? 'CAT-' + categoryId : 'Se genera automáticamente'"
+          readonly
+        />
+
+        <small class="category-form__hint">
+          Este identificador será generado automáticamente por la base de datos.
+        </small>
+      </div>
+
+      <div class="category-form__field">
+        <label class="form-label" for="nombre">
+          Nombre de la Categoría *
+        </label>
+
+        <input
+          id="nombre"
+          class="form-control category-form__title-input"
+          formControlName="nombre"
+          placeholder="Ej. Cerámica Artesanal"
+          [class.form-control--error]="isInvalid('nombre')"
+        />
+
+        @if (isInvalid('nombre')) {
+          <span class="form-error">
+            El nombre de la categoría es obligatorio.
+          </span>
+        }
+      </div>
+
+      <div class="category-form__field">
+        <label class="form-label" for="descripcion">
+          Descripción *
+        </label>
+
+        <textarea
+          id="descripcion"
+          class="form-control"
+          formControlName="descripcion"
+          placeholder="Describe qué tipo de productos pertenecen a esta categoría..."
+          [class.form-control--error]="isInvalid('descripcion')"
+        ></textarea>
+
+        @if (isInvalid('descripcion')) {
+          <span class="form-error">
+            La descripción de la categoría es obligatoria.
+          </span>
+        }
+      </div>
+
+      <footer class="category-form__actions">
+
+        <a
+          class="btn btn-outline"
+          routerLink="/categorias"
+        >
+          Cancelar
+        </a>
+
+        <button
+          class="btn btn-primary"
+          type="submit"
+          [disabled]="isSaving"
+        >
+          <lucide-icon
+            [img]="saveIcon"
+            size="20"
+            strokeWidth="2.4"
+            aria-hidden="true"
+          />
+
+          {{ isEditMode ? 'Guardar Cambios' : 'Crear Categoría' }}
+        </button>
+
+      </footer>
+
+    </form>
+
+  }
+
+</section>

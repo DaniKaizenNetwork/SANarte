@@ -1,0 +1,151 @@
+<section class="products-page">
+
+  <header class="products-page__header">
+
+    <div>
+      <h2 class="page-title">Products</h2>
+      <p class="page-subtitle">
+        Manage your artisanal collection
+      </p>
+    </div>
+
+    <div class="products-page__actions">
+
+      <a
+        class="products-page__new btn btn-primary"
+        routerLink="/productos/nuevo"
+      >
+        <lucide-icon
+          [img]="plusIcon"
+          size="20"
+          strokeWidth="2.4"
+          aria-hidden="true"
+        />
+        Nuevo
+      </a>
+
+    </div>
+
+  </header>
+
+  @if (errorMessage()) {
+    <p class="products-page__alert" role="alert">
+      {{ errorMessage() }}
+    </p>
+  }
+
+  @if (loading()) {
+    <div class="products-page__loading" aria-live="polite">
+      Cargando productos...
+    </div>
+  } @else {
+
+    <div class="products-page__grid">
+
+      @for (product of filteredProducts(); track product.idProducto) {
+
+        <article class="product-card">
+
+          <div class="product-card__image">
+
+            <img
+              [src]="product.imagenUrl || 'https://images.unsplash.com/photo-1578749556568-bc2c40e68b61?w=900&h=620&fit=crop'"
+              [alt]="product.nombre"
+              loading="lazy"
+            />
+
+            <span
+              class="product-card__status"
+              [class.product-card__status--sold-out]="product.estado === 'AGOTADO'"
+            >
+              {{ product.estado === 'DISPONIBLE' ? 'Activo' : 'Agotado' }}
+            </span>
+
+          </div>
+
+          <div class="product-card__body">
+
+            <div class="product-card__meta">
+              <span>{{ product.categoria.nombre }}</span>
+
+              <strong>
+                {{ product.precio | currency:'COP':'symbol':'1.0-0' }}
+              </strong>
+            </div>
+
+            <h3>{{ product.nombre }}</h3>
+
+            <p>
+              {{ product.detalle }}
+            </p>
+
+            <div class="product-card__footer">
+
+              <a
+                class="product-card__edit"
+                [routerLink]="['/productos', product.idProducto, 'editar']"
+                aria-label="Editar producto"
+              >
+                <lucide-icon
+                  [img]="editIcon"
+                  size="19"
+                  strokeWidth="2.2"
+                  aria-hidden="true"
+                />
+                Editar
+              </a>
+
+              <button
+                type="button"
+                class="product-card__delete"
+                (click)="deleteProduct(product)"
+                aria-label="Eliminar producto"
+              >
+                <lucide-icon
+                  [img]="trashIcon"
+                  size="19"
+                  strokeWidth="2.2"
+                  aria-hidden="true"
+                />
+                Eliminar
+              </button>
+
+            </div>
+
+          </div>
+
+        </article>
+
+      } @empty {
+
+        <div class="products-page__empty">
+          <h3>No hay productos registrados</h3>
+          <p>
+            Crea tu primera artesanía para comenzar a construir el catálogo.
+          </p>
+
+          <a class="btn btn-primary" routerLink="/productos/nuevo">
+            Crear producto
+          </a>
+        </div>
+
+      }
+
+    </div>
+
+  }
+
+  <a
+    class="products-page__floating"
+    routerLink="/productos/nuevo"
+    aria-label="Crear nuevo producto"
+  >
+    <lucide-icon
+      [img]="plusIcon"
+      size="34"
+      strokeWidth="2.3"
+      aria-hidden="true"
+    />
+  </a>
+
+</section>

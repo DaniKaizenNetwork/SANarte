@@ -1,0 +1,121 @@
+<main class="login-page">
+
+  <section class="login-card" aria-labelledby="login-title">
+
+    <div class="login-card__icon" aria-hidden="true">
+      <lucide-icon
+        [img]="shieldUserIcon"
+        size="34"
+        strokeWidth="2.1"
+      />
+    </div>
+
+    <header class="login-card__header">
+      <h1 id="login-title">Curator Portal</h1>
+      <p>Managing Excellence</p>
+    </header>
+
+    <form
+      class="login-form"
+      [formGroup]="form"
+      (ngSubmit)="submit()"
+      novalidate
+    >
+
+      <div class="login-form__field">
+        <label for="email">Email Address</label>
+
+        <div
+          class="login-form__input"
+          [class.login-form__input--error]="isInvalid('email')"
+        >
+          <lucide-icon
+            [img]="mailIcon"
+            size="23"
+            strokeWidth="2.2"
+            aria-hidden="true"
+          />
+
+          <input
+            id="email"
+            type="email"
+            formControlName="email"
+            placeholder="admin@artesanias.com"
+            autocomplete="email"
+            aria-describedby="email-error"
+          />
+        </div>
+
+        @if (isInvalid('email')) {
+          <small id="email-error" class="login-form__error">
+            Ingresa un correo electrónico válido.
+          </small>
+        }
+      </div>
+
+      <div class="login-form__field">
+        <div class="login-form__label-row">
+          <label for="password">Password</label>
+
+          <a routerLink="/login">
+            Forgot?
+          </a>
+        </div>
+
+        <div
+          class="login-form__input"
+          [class.login-form__input--error]="isInvalid('password')"
+        >
+          <lucide-icon
+            [img]="lockIcon"
+            size="23"
+            strokeWidth="2.2"
+            aria-hidden="true"
+          />
+
+          <input
+            id="password"
+            type="password"
+            formControlName="password"
+            placeholder="••••••••"
+            autocomplete="current-password"
+            aria-describedby="password-error"
+          />
+
+          <lucide-icon
+            [img]="eyeOffIcon"
+            size="23"
+            strokeWidth="2.2"
+            aria-hidden="true"
+          />
+        </div>
+
+        @if (isInvalid('password')) {
+          <small id="password-error" class="login-form__error">
+            La contraseña debe tener mínimo 6 caracteres.
+          </small>
+        }
+      </div>
+
+      <button
+        class="login-form__button"
+        type="submit"
+      >
+        Acceder
+        <lucide-icon
+          [img]="arrowRightIcon"
+          size="22"
+          strokeWidth="2.4"
+          aria-hidden="true"
+        />
+      </button>
+
+    </form>
+
+  </section>
+
+  <footer class="login-page__footer">
+    © 2026 SANarte Platform. Admin Interface.
+  </footer>
+
+</main>

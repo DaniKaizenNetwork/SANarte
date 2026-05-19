@@ -1,0 +1,65 @@
+<aside class="sidebar" aria-label="Menú principal del administrador">
+
+  <section class="sidebar__top">
+
+    <a class="sidebar__brand" routerLink="/productos" aria-label="Ir al inicio del panel administrador">
+      <span class="sidebar__brand-title">Curator Portal</span>
+      <span class="sidebar__brand-subtitle">Managing Excellence</span>
+    </a>
+
+    <a class="sidebar__add-button" routerLink="/productos/nuevo">
+      <span class="sidebar__add-icon" aria-hidden="true">+</span>
+      <span>Add New Product</span>
+    </a>
+
+    <nav class="sidebar__nav" aria-label="Navegación principal">
+      @for (item of menuItems; track item.route) {
+        <a
+          class="sidebar__nav-link"
+          [routerLink]="item.route"
+          routerLinkActive="sidebar__nav-link--active"
+          [routerLinkActiveOptions]="{ exact: item.exact ?? false }"
+        >
+          <span class="sidebar__icon" [class]="'sidebar__icon sidebar__icon--' + item.icon" aria-hidden="true">
+            @switch (item.icon) {
+              @case ('dashboard') {
+                <span class="icon-grid"></span>
+              }
+              @case ('products') {
+                <span class="icon-box"></span>
+              }
+              @case ('categories') {
+                <span class="icon-shapes"></span>
+              }
+              @case ('inventory') {
+                <span class="icon-layers"></span>
+              }
+            }
+          </span>
+
+          <span>{{ item.label }}</span>
+        </a>
+      }
+    </nav>
+
+  </section>
+
+  <section class="sidebar__bottom" aria-label="Opciones de cuenta">
+
+    <a class="sidebar__nav-link" href="#" aria-label="Configuraciones">
+      <span class="sidebar__icon" aria-hidden="true">
+        <span class="icon-settings"></span>
+      </span>
+      <span>Settings</span>
+    </a>
+
+    <a class="sidebar__nav-link" routerLink="/login" aria-label="Cerrar sesión">
+      <span class="sidebar__icon" aria-hidden="true">
+        <span class="icon-logout"></span>
+      </span>
+      <span>Logout</span>
+    </a>
+
+  </section>
+
+</aside>
