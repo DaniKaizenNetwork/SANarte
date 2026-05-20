@@ -4,11 +4,11 @@
 
     <div>
       <h2 class="page-title">
-        {{ title }}
+        {{ title() }}
       </h2>
 
       <p class="page-subtitle">
-        {{ subtitle }}
+        {{ subtitle() }}
       </p>
     </div>
 
@@ -27,7 +27,7 @@
 
   </header>
 
-  @if (isLoading) {
+  @if (isLoading()) {
 
     <div class="category-form-page__loading">
       Cargando categoría...
@@ -42,9 +42,9 @@
       novalidate
     >
 
-      @if (errorMessage) {
+      @if (errorMessage()) {
         <p class="category-form__alert" role="alert">
-          {{ errorMessage }}
+          {{ errorMessage() }}
         </p>
       }
 
@@ -64,7 +64,7 @@
         <input
           id="category-id"
           class="form-control"
-          [value]="isEditMode ? 'CAT-' + categoryId : 'Se genera automáticamente'"
+          [value]="isEditMode() ? 'CAT-' + categoryId() : 'Se genera automáticamente'"
           readonly
         />
 
@@ -125,7 +125,7 @@
         <button
           class="btn btn-primary"
           type="submit"
-          [disabled]="isSaving"
+          [disabled]="isSaving()"
         >
           <lucide-icon
             [img]="saveIcon"
@@ -134,7 +134,7 @@
             aria-hidden="true"
           />
 
-          {{ isEditMode ? 'Guardar Cambios' : 'Crear Categoría' }}
+          {{ isEditMode() ? 'Guardar Cambios' : 'Crear Categoría' }}
         </button>
 
       </footer>

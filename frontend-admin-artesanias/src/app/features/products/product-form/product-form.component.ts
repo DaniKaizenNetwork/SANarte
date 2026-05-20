@@ -1,5 +1,6 @@
 import { AsyncPipe } from '@angular/common';
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
+
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import {
   FormBuilder,
@@ -18,6 +19,7 @@ import { Observable } from 'rxjs';
 
 import { Category } from '../../../core/models/category.model';
 import {
+  Product,
   ProductRequest,
   ProductStatus
 } from '../../../core/models/product.model';
@@ -84,49 +86,58 @@ export class ProductFormComponent implements OnInit {
     ]
   });
 
-  productId: number | null = null;
-  isSaving = false;
-  isLoading = false;
-  submitted = false;
-  errorMessage = '';
+  readonly productId = signal<number | null>(null);
+  readonly isSaving = signal(false);
+  readonly isLoading = signal(false);
+  readonly submitted = signal(false);
+  readonly errorMessage = signal('');
 
   readonly arrowLeftIcon = ArrowLeft;
   readonly imagePlusIcon = ImagePlus;
   readonly saveIcon = Save;
 
-  get isEditMode(): boolean {
-    return this.productId !== null;
-  }
+  readonly isEditMode = computed(() => this.productId() !== null);
 
-  get title(): string {
-    return this.isEditMode ? 'Edit Product' : 'Crear Nuevo Producto';
-  }
 
-  get subtitle(): string {
-    return this.isEditMode
-      ? 'Update the details, pricing, and availability of this artisanal piece.'
-      : 'Añade una nueva pieza artesanal al catálogo. Asegúrate de proporcionar detalles precisos y fotografías de alta calidad.';
-  }
+
+  readonly title = computed(() => this.isEditMode() ? 'Edit Product' : 'Crear Nuevo Producto');
+
+
+
+  readonly subtitle = computed(() => this.isEditMode()
+    ? 'Update the details, pricing, and availability of this artisanal piece.'
+    : 'Añade una nueva pieza artesanal al catálogo. Asegúrate de proporcionar detalles precisos y fotografías de alta calidad.'
+  );
+
 
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
-    this.productId = id ? Number(id) : null;
+    const parsedId = id ? Number(id) : null;
+    this.productId.set(
+      parsedId !== null && Number.isFinite(parsedId) && parsedId > 0
+        ? parsedId
+        : null
 
-    if (this.productId) {
-      this.loadProduct(this.productId);
+    );
+
+    const currentId = this.productId();
+    if (currentId) {
+      this.loadProduct(currentId);
+    } else if (id) {
+      this.errorMessage.set('El producto seleccionado no es válido.');
     }
   }
 
   submit(): void {
-    this.submitted = true;
+    this.submitted.set(true);
     this.form.markAllAsTouched();
-    this.errorMessage = '';
+    this.errorMessage.set('');
 
     if (this.form.invalid) {
       return;
     }
 
-    this.isSaving = true;
+    this.isSaving.set(true);
 
     const raw = this.form.getRawValue();
 
@@ -139,8 +150,9 @@ export class ProductFormComponent implements OnInit {
       idCategoria: Number(raw.idCategoria)
     };
 
-    const request$ = this.productId
-      ? this.productService.update(this.productId, payload)
+    const currentId = this.productId();
+    const request$ = currentId
+      ? this.productService.update(currentId, payload)
       : this.productService.create(payload);
 
     request$.subscribe({
@@ -148,8 +160,8 @@ export class ProductFormComponent implements OnInit {
         this.router.navigateByUrl('/productos');
       },
       error: (error: Error) => {
-        this.errorMessage = error.message;
-        this.isSaving = false;
+        this.errorMessage.set(error.message);
+        this.isSaving.set(false);
       }
     });
   }
@@ -164,29 +176,40 @@ export class ProductFormComponent implements OnInit {
       | 'imagenUrl'
   ): boolean {
     const control = this.form.controls[controlName];
-    return control.invalid && (control.touched || this.submitted);
+    return control.invalid && (control.touched || this.submitted());
   }
 
   private loadProduct(id: number): void {
-    this.isLoading = true;
+    this.isLoading.set(true);
 
     this.productService.getById(id).subscribe({
       next: product => {
+        const idCategoria = this.getProductCategoryId(product);
+
         this.form.patchValue({
           nombre: product.nombre,
           detalle: product.detalle,
-          precio: product.precio,
+          precio: Number(product.precio),
           imagenUrl: product.imagenUrl ?? '',
           estado: product.estado,
-          idCategoria: product.categoria.idCategoria
+          idCategoria
         });
 
-        this.isLoading = false;
+        this.isLoading.set(false);
       },
       error: (error: Error) => {
-        this.errorMessage = error.message;
-        this.isLoading = false;
+        this.errorMessage.set(error.message);
+        this.isLoading.set(false);
       }
     });
+  }
+
+  private getProductCategoryId(
+    product: Product & {
+      idCategoria?: number;
+      categoria?: Category | null;
+    }
+  ): number {
+    return product.categoria?.idCategoria ?? product.idCategoria ?? 0;
   }
 }

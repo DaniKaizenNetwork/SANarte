@@ -4,11 +4,11 @@
 
     <div>
       <h2 class="page-title">
-        {{ title }}
+        {{ title() }}
       </h2>
 
       <p class="page-subtitle">
-        {{ subtitle }}
+        {{ subtitle() }}
       </p>
     </div>
 
@@ -27,7 +27,7 @@
 
   </header>
 
-  @if (isLoading) {
+  @if (isLoading()) {
     <div class="product-form-page__loading">
       Cargando producto...
     </div>
@@ -40,9 +40,9 @@
       novalidate
     >
 
-      @if (errorMessage) {
+      @if (errorMessage()) {
         <p class="product-form__alert" role="alert">
-          {{ errorMessage }}
+          {{ errorMessage() }}
         </p>
       }
 
@@ -56,7 +56,7 @@
           <input
             id="product-id"
             class="form-control"
-            [value]="isEditMode ? 'PRD-' + productId : 'Se genera automáticamente'"
+            [value]="isEditMode() ? 'PRD-' + productId() : 'Se genera automáticamente'"
             readonly
           />
         </div>
@@ -237,7 +237,7 @@
         <button
           class="btn btn-primary"
           type="submit"
-          [disabled]="isSaving"
+          [disabled]="isSaving()"
         >
           <lucide-icon
             [img]="saveIcon"
@@ -246,7 +246,7 @@
             aria-hidden="true"
           />
 
-          {{ isEditMode ? 'Guardar Cambios' : 'Guardar Producto' }}
+          {{ isEditMode() ? 'Guardar Cambios' : 'Guardar Producto' }}
         </button>
 
       </footer>

@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import {
   FormBuilder,
@@ -50,49 +50,50 @@ export class CategoryFormComponent implements OnInit {
     ]
   });
 
-  categoryId: number | null = null;
-  isSaving = false;
-  isLoading = false;
-  submitted = false;
-  errorMessage = '';
+  readonly categoryId = signal<number | null>(null);
+  readonly isSaving = signal(false);
+  readonly isLoading = signal(false);
+  readonly submitted = signal(false);
+  readonly errorMessage = signal('');
 
   readonly arrowLeftIcon = ArrowLeft;
   readonly saveIcon = Save;
   readonly tagsIcon = Tags;
 
-  get isEditMode(): boolean {
-    return this.categoryId !== null;
-  }
+  readonly isEditMode = computed(() => this.categoryId() !== null);
 
-  get title(): string {
-    return this.isEditMode ? 'Editar Categoría' : 'Crear Categoría';
-  }
 
-  get subtitle(): string {
-    return this.isEditMode
-      ? 'Actualiza la información de esta categoría para mantener organizado tu catálogo.'
-      : 'Añade una nueva categoría para clasificar tus artesanías por técnica, material o colección.';
-  }
+
+  readonly title = computed(() => this.isEditMode() ? 'Editar Categoría' : 'Crear Categoría');
+
+
+
+  readonly subtitle = computed(() => this.isEditMode()
+    ? 'Actualiza la información de esta categoría para mantener organizado tu catálogo.'
+    : 'Añade una nueva categoría para clasificar tus artesanías por técnica, material o colección.'
+  );
+
 
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
-    this.categoryId = id ? Number(id) : null;
+    this.categoryId.set(id ? Number(id) : null);
 
-    if (this.categoryId) {
-      this.loadCategory(this.categoryId);
+    const currentId = this.categoryId();
+    if (currentId) {
+      this.loadCategory(currentId);
     }
   }
 
   submit(): void {
-    this.submitted = true;
+    this.submitted.set(true);
     this.form.markAllAsTouched();
-    this.errorMessage = '';
+    this.errorMessage.set('');
 
     if (this.form.invalid) {
       return;
     }
 
-    this.isSaving = true;
+    this.isSaving.set(true);
 
     const raw = this.form.getRawValue();
 
@@ -101,8 +102,9 @@ export class CategoryFormComponent implements OnInit {
       descripcion: raw.descripcion.trim()
     };
 
-    const request$ = this.categoryId
-      ? this.categoryService.update(this.categoryId, payload)
+    const currentId = this.categoryId();
+    const request$ = currentId
+      ? this.categoryService.update(currentId, payload)
       : this.categoryService.create(payload);
 
     request$.subscribe({
@@ -110,19 +112,19 @@ export class CategoryFormComponent implements OnInit {
         this.router.navigateByUrl('/categorias');
       },
       error: (error: Error) => {
-        this.errorMessage = error.message;
-        this.isSaving = false;
+        this.errorMessage.set(error.message);
+        this.isSaving.set(false);
       }
     });
   }
 
   isInvalid(controlName: 'nombre' | 'descripcion'): boolean {
     const control = this.form.controls[controlName];
-    return control.invalid && (control.touched || this.submitted);
+    return control.invalid && (control.touched || this.submitted());
   }
 
   private loadCategory(id: number): void {
-    this.isLoading = true;
+    this.isLoading.set(true);
 
     this.categoryService.getById(id).subscribe({
       next: category => {
@@ -131,11 +133,11 @@ export class CategoryFormComponent implements OnInit {
           descripcion: category.descripcion
         });
 
-        this.isLoading = false;
+        this.isLoading.set(false);
       },
       error: (error: Error) => {
-        this.errorMessage = error.message;
-        this.isLoading = false;
+        this.errorMessage.set(error.message);
+        this.isLoading.set(false);
       }
     });
   }
