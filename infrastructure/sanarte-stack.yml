@@ -1,0 +1,623 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: SANarte - Todo el trafico pasa por el API Gateway via ECS Service Connect
+
+Parameters:
+
+  DBPassword:
+    Type: String
+    NoEcho: true
+    MinLength: 8
+    Description: Contrasena para la base de datos PostgreSQL
+
+  Environment:
+    Type: String
+    Default: production
+    AllowedValues: [production, staging]  
+
+Resources:
+
+  # --- VPC ---
+
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+        - Key: Name
+          Value: sanarte-vpc
+
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+
+  VPCGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref VPC
+      InternetGatewayId: !Ref InternetGateway
+
+  PublicSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 10.0.1.0/24
+      AvailabilityZone: !Select [0, !GetAZs ""]
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: sanarte-public-1
+
+  PublicSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 10.0.2.0/24
+      AvailabilityZone: !Select [1, !GetAZs ""]
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: sanarte-public-2
+
+  PrivateSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 10.0.3.0/24
+      AvailabilityZone: !Select [0, !GetAZs ""]
+      Tags:
+        - Key: Name
+          Value: sanarte-private-db
+
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+
+  PublicRoute:
+    Type: AWS::EC2::Route
+    DependsOn: VPCGatewayAttachment
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+
+  SubnetRouteAssoc1:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet1
+      RouteTableId: !Ref PublicRouteTable
+
+  SubnetRouteAssoc2:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet2
+      RouteTableId: !Ref PublicRouteTable
+
+  # --- SECURITY GROUPS ---
+
+  ALBSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Trafico HTTP desde internet al ALB
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+
+  ECSSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Trafico desde el ALB y entre contenedores ECS
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 8080
+          ToPort: 8090
+          SourceSecurityGroupId: !Ref ALBSecurityGroup
+
+  # Permite comunicacion interna entre tareas ECS (gateway -> admin/public via Service Connect)
+  ECSToECSIngress:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !Ref ECSSecurityGroup
+      IpProtocol: tcp
+      FromPort: 8080
+      ToPort: 8090
+      SourceSecurityGroupId: !Ref ECSSecurityGroup
+
+  RDSSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Acceso PostgreSQL solo desde contenedores ECS
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 5432
+          ToPort: 5432
+          SourceSecurityGroupId: !Ref ECSSecurityGroup
+
+  # --- CLOUD MAP (Private DNS para Service Discovery) ---
+
+  DNSNamespace:
+    Type: AWS::ServiceDiscovery::PrivateDnsNamespace
+    Properties:
+      Name: sanarte.local
+      Vpc: !Ref VPC
+
+  ServiceDiscoveryAdmin:
+    Type: AWS::ServiceDiscovery::Service
+    Properties:
+      Name: admin-products
+      NamespaceId: !Ref DNSNamespace
+      DnsConfig:
+        RoutingPolicy: MULTIVALUE
+        DnsRecords:
+          - Type: A
+            TTL: 10
+      HealthCheckCustomConfig:
+        FailureThreshold: 1
+
+  ServiceDiscoveryPublic:
+    Type: AWS::ServiceDiscovery::Service
+    Properties:
+      Name: public-products
+      NamespaceId: !Ref DNSNamespace
+      DnsConfig:
+        RoutingPolicy: MULTIVALUE
+        DnsRecords:
+          - Type: A
+            TTL: 10
+      HealthCheckCustomConfig:
+        FailureThreshold: 1
+      Description: Namespace para ECS Service Connect de SANarte
+
+  # --- ECR REPOSITORIES ---
+
+  ECRGateway:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: sanarte/gateway-service
+      LifecyclePolicy:
+        LifecyclePolicyText: |
+          {
+            "rules": [{
+              "rulePriority": 1,
+              "selection": {
+                "tagStatus": "untagged",
+                "countType": "sinceImagePushed",
+                "countUnit": "days",
+                "countNumber": 7
+              },
+              "action": { "type": "expire" }
+            }]
+          }
+
+  ECRAdminProducts:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: sanarte/admin-products-service
+      LifecyclePolicy:
+        LifecyclePolicyText: |
+          {
+            "rules": [{
+              "rulePriority": 1,
+              "selection": {
+                "tagStatus": "untagged",
+                "countType": "sinceImagePushed",
+                "countUnit": "days",
+                "countNumber": 7
+              },
+              "action": { "type": "expire" }
+            }]
+          }
+
+  ECRPublicProducts:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: sanarte/public-products-service
+      LifecyclePolicy:
+        LifecyclePolicyText: |
+          {
+            "rules": [{
+              "rulePriority": 1,
+              "selection": {
+                "tagStatus": "untagged",
+                "countType": "sinceImagePushed",
+                "countUnit": "days",
+                "countNumber": 7
+              },
+              "action": { "type": "expire" }
+            }]
+          }
+
+  # --- RDS POSTGRESQL ---
+
+  DBSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: Subnet group para RDS SANarte
+      SubnetIds:
+        - !Ref PrivateSubnet
+        - !Ref PublicSubnet2
+
+  RDSInstance:
+    Type: AWS::RDS::DBInstance
+    DeletionPolicy: Snapshot
+    Properties:
+      DBInstanceIdentifier: sanarte-db
+      DBName: sanarte_db
+      DBInstanceClass: db.t3.micro
+      Engine: postgres
+      EngineVersion: "16.3"
+      MasterUsername: sanadmin
+      MasterUserPassword: !Ref DBPassword
+      AllocatedStorage: 20
+      StorageType: gp2
+      MultiAZ: false
+      PubliclyAccessible: false
+      DBSubnetGroupName: !Ref DBSubnetGroup
+      VPCSecurityGroups:
+        - !Ref RDSSecurityGroup
+
+  # --- ALB (solo enruta al gateway) ---
+
+  LoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Name: sanarte-alb
+      Scheme: internet-facing
+      SecurityGroups:
+        - !Ref ALBSecurityGroup
+      Subnets:
+        - !Ref PublicSubnet1
+        - !Ref PublicSubnet2
+
+  TargetGroupGateway:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Name: tg-gateway
+      Port: 8080
+      Protocol: HTTP
+      TargetType: ip
+      VpcId: !Ref VPC
+      HealthCheckPort: "8090"
+      HealthCheckPath: /actuator/health
+      HealthCheckIntervalSeconds: 30
+      HealthyThresholdCount: 2
+      UnhealthyThresholdCount: 5
+
+  HTTPListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      LoadBalancerArn: !Ref LoadBalancer
+      Port: 80
+      Protocol: HTTP
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref TargetGroupGateway
+
+  # --- ECS CLUSTER con Service Connect ---
+
+  ECSCluster:
+    Type: AWS::ECS::Cluster
+    Properties:
+      ClusterName: sanarte-cluster
+
+  ECSTaskRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+
+  # --- CLOUDWATCH LOG GROUPS ---
+
+  LogGroupGateway:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: /ecs/sanarte/gateway-service
+      RetentionInDays: 14
+
+  LogGroupAdmin:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: /ecs/sanarte/admin-products-service
+      RetentionInDays: 14
+
+  LogGroupPublic:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: /ecs/sanarte/public-products-service
+      RetentionInDays: 14
+
+  # --- ECS TASK: GATEWAY ---
+
+  TaskDefGateway:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: sanarte-gateway
+      Cpu: 256
+      Memory: 512
+      NetworkMode: awsvpc
+      RequiresCompatibilities: [FARGATE]
+      ExecutionRoleArn: !GetAtt ECSTaskRole.Arn
+      ContainerDefinitions:
+        - Name: gateway-service
+          Image: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/sanarte/gateway-service:latest"
+          PortMappings:
+            - ContainerPort: 8080
+              Protocol: tcp
+          Environment:
+            - Name: CORS_ALLOWED_ORIGINS
+              Value: !Sub "http://sanarte-frontend-user-${AWS::AccountId}.s3-website-${AWS::Region}.amazonaws.com,http://sanarte-frontend-admin-${AWS::AccountId}.s3-website-${AWS::Region}.amazonaws.com,http://localhost:4200,http://localhost:4201"
+            - Name: ADMIN_SERVICE_URL
+              Value: http://admin-products.sanarte.local:8081
+            - Name: PUBLIC_SERVICE_URL
+              Value: http://public-products.sanarte.local:8082
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: /ecs/sanarte/gateway-service
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: ecs
+
+  ECSServiceGateway:
+    Type: AWS::ECS::Service
+    DependsOn: HTTPListener
+    Properties:
+      ServiceName: gateway-service
+      Cluster: !Ref ECSCluster
+      TaskDefinition: !Ref TaskDefGateway
+      LaunchType: FARGATE
+      DesiredCount: 1
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          Subnets:
+            - !Ref PublicSubnet1
+          SecurityGroups:
+            - !Ref ECSSecurityGroup
+          AssignPublicIp: ENABLED
+      LoadBalancers:
+        - ContainerName: gateway-service
+          ContainerPort: 8080
+          TargetGroupArn: !Ref TargetGroupGateway
+
+  # --- ECS TASK: ADMIN PRODUCTS ---
+
+  TaskDefAdmin:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: sanarte-admin-products
+      Cpu: 256
+      Memory: 512
+      NetworkMode: awsvpc
+      RequiresCompatibilities: [FARGATE]
+      ExecutionRoleArn: !GetAtt ECSTaskRole.Arn
+      ContainerDefinitions:
+        - Name: admin-products-service
+          Image: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/sanarte/admin-products-service:latest"
+          PortMappings:
+            - ContainerPort: 8081
+              Protocol: tcp
+          Environment:
+            - Name: SPRING_DATASOURCE_URL
+              Value: !Sub "jdbc:postgresql://${RDSInstance.Endpoint.Address}:5432/sanarte_db"
+            - Name: SPRING_DATASOURCE_USERNAME
+              Value: sanadmin
+            - Name: SPRING_DATASOURCE_PASSWORD
+              Value: !Ref DBPassword
+            - Name: CORS_ALLOWED_ORIGINS
+              Value: !Sub "http://sanarte-frontend-user-${AWS::AccountId}.s3-website-${AWS::Region}.amazonaws.com,http://sanarte-frontend-admin-${AWS::AccountId}.s3-website-${AWS::Region}.amazonaws.com,http://localhost:4200,http://localhost:4201"
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: /ecs/sanarte/admin-products-service
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: ecs
+
+  ECSServiceAdmin:
+    Type: AWS::ECS::Service
+    Properties:
+      ServiceName: admin-products-service
+      Cluster: !Ref ECSCluster
+      TaskDefinition: !Ref TaskDefAdmin
+      LaunchType: FARGATE
+      DesiredCount: 1
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          Subnets:
+            - !Ref PublicSubnet1
+          SecurityGroups:
+            - !Ref ECSSecurityGroup
+          AssignPublicIp: ENABLED
+      ServiceRegistries:
+        - RegistryArn: !GetAtt ServiceDiscoveryAdmin.Arn
+
+  # --- ECS TASK: PUBLIC PRODUCTS ---
+
+  TaskDefPublic:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: sanarte-public-products
+      Cpu: 256
+      Memory: 512
+      NetworkMode: awsvpc
+      RequiresCompatibilities: [FARGATE]
+      ExecutionRoleArn: !GetAtt ECSTaskRole.Arn
+      ContainerDefinitions:
+        - Name: public-products-service
+          Image: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/sanarte/public-products-service:latest"
+          PortMappings:
+            - ContainerPort: 8082
+              Protocol: tcp
+          Environment:
+            - Name: SPRING_DATASOURCE_URL
+              Value: !Sub "jdbc:postgresql://${RDSInstance.Endpoint.Address}:5432/sanarte_db"
+            - Name: SPRING_DATASOURCE_USERNAME
+              Value: sanadmin
+            - Name: SPRING_DATASOURCE_PASSWORD
+              Value: !Ref DBPassword
+            - Name: CORS_ALLOWED_ORIGINS
+              Value: !Sub "http://sanarte-frontend-user-${AWS::AccountId}.s3-website-${AWS::Region}.amazonaws.com,http://sanarte-frontend-admin-${AWS::AccountId}.s3-website-${AWS::Region}.amazonaws.com,http://localhost:4200,http://localhost:4201"
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: /ecs/sanarte/public-products-service
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: ecs
+
+  ECSServicePublic:
+    Type: AWS::ECS::Service
+    Properties:
+      ServiceName: public-products-service
+      Cluster: !Ref ECSCluster
+      TaskDefinition: !Ref TaskDefPublic
+      LaunchType: FARGATE
+      DesiredCount: 1
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          Subnets:
+            - !Ref PublicSubnet1
+          SecurityGroups:
+            - !Ref ECSSecurityGroup
+          AssignPublicIp: ENABLED
+      ServiceRegistries:
+        - RegistryArn: !GetAtt ServiceDiscoveryPublic.Arn
+
+  # --- CLOUDWATCH ALARMAS ---
+
+  AlarmCPUGateway:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: sanarte-gateway-cpu-alta
+      AlarmDescription: CPU del gateway supera el 80%
+      MetricName: CPUUtilization
+      Namespace: AWS/ECS
+      Dimensions:
+        - Name: ClusterName
+          Value: sanarte-cluster
+        - Name: ServiceName
+          Value: gateway-service
+      Statistic: Average
+      Period: 300
+      EvaluationPeriods: 2
+      Threshold: 80
+      ComparisonOperator: GreaterThanThreshold
+
+  AlarmALB5xx:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: sanarte-alb-errores-5xx
+      AlarmDescription: Errores 5xx en el ALB superan 10 en 5 minutos
+      MetricName: HTTPCode_Target_5XX_Count
+      Namespace: AWS/ApplicationELB
+      Dimensions:
+        - Name: LoadBalancer
+          Value: !GetAtt LoadBalancer.LoadBalancerFullName
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 10
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
+
+  # --- S3 FRONTEND BUCKETS ---
+
+  S3FrontendUser:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "sanarte-frontend-user-${AWS::AccountId}"
+      WebsiteConfiguration:
+        IndexDocument: index.html
+        ErrorDocument: index.html
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: false
+        BlockPublicPolicy: false
+        IgnorePublicAcls: false
+        RestrictPublicBuckets: false
+
+  S3FrontendUserPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref S3FrontendUser
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal: "*"
+            Action: s3:GetObject
+            Resource: !Sub "${S3FrontendUser.Arn}/*"
+
+  S3FrontendAdmin:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "sanarte-frontend-admin-${AWS::AccountId}"
+      WebsiteConfiguration:
+        IndexDocument: index.html
+        ErrorDocument: index.html
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: false
+        BlockPublicPolicy: false
+        IgnorePublicAcls: false
+        RestrictPublicBuckets: false
+
+  S3FrontendAdminPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref S3FrontendAdmin
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal: "*"
+            Action: s3:GetObject
+            Resource: !Sub "${S3FrontendAdmin.Arn}/*"
+
+Outputs:
+
+  APIUrl:
+    Description: URL de la API (todo pasa por el gateway)
+    Value: !Sub "http://${LoadBalancer.DNSName}"
+    Export:
+      Name: SANarte-API-URL
+
+  ALBDNSName:
+    Description: DNS del ALB
+    Value: !GetAtt LoadBalancer.DNSName
+
+  ECSClusterName:
+    Description: Nombre del cluster ECS
+    Value: !Ref ECSCluster
+
+  RDSEndpoint:
+    Description: Endpoint de la base de datos RDS
+    Value: !GetAtt RDSInstance.Endpoint.Address
+
+  FrontendUserURL:
+    Description: URL publica del frontend de usuarios
+    Value: !GetAtt S3FrontendUser.WebsiteURL
+    Export:
+      Name: SANarte-Frontend-User-URL
+
+  FrontendAdminURL:
+    Description: URL publica del frontend de administracion
+    Value: !GetAtt S3FrontendAdmin.WebsiteURL
+    Export:
+      Name: SANarte-Frontend-Admin-URL
+
+  FrontendUserBucket:
+    Description: Nombre del bucket S3 del frontend de usuarios
+    Value: !Ref S3FrontendUser
+
+  FrontendAdminBucket:
+    Description: Nombre del bucket S3 del frontend de administracion
+    Value: !Ref S3FrontendAdmin

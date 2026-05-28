@@ -1,0 +1,289 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: SANarte - Base Infrastructure + EC2 Deploy + S3 Frontend
+
+Parameters:
+
+  DBPassword:
+    Type: String
+    NoEcho: true
+    MinLength: 8
+    Description: Contraseña para PostgreSQL
+
+  Environment:
+    Type: String
+    Default: production
+    AllowedValues:
+      - production
+      - staging
+
+Resources:
+
+  # ─────────────────────────────────────────────────────────────
+  # VPC
+  # ─────────────────────────────────────────────────────────────
+
+  VPC:
+    Type: AWS::EC2::VPC
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+        - Key: Name
+          Value: sanarte-vpc
+
+  PublicSubnet1:
+    Type: AWS::EC2::Subnet
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 10.0.1.0/24
+      AvailabilityZone: !Select [0, !GetAZs ""]
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: sanarte-public-1
+
+  PublicSubnet2:
+    Type: AWS::EC2::Subnet
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 10.0.2.0/24
+      AvailabilityZone: !Select [1, !GetAZs ""]
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: sanarte-public-2
+
+  PrivateSubnet:
+    Type: AWS::EC2::Subnet
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 10.0.3.0/24
+      AvailabilityZone: !Select [0, !GetAZs ""]
+      Tags:
+        - Key: Name
+          Value: sanarte-private-db
+
+  # ─────────────────────────────────────────────────────────────
+  # SECURITY GROUPS
+  # ─────────────────────────────────────────────────────────────
+
+  EC2SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      GroupDescription: Acceso SSH y aplicaciones microservicios
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+
+        - IpProtocol: tcp
+          FromPort: 8080
+          ToPort: 8082
+          CidrIp: 0.0.0.0/0
+
+  RDSSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      GroupDescription: PostgreSQL access
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 5432
+          ToPort: 5432
+          SourceSecurityGroupId: !Ref EC2SecurityGroup
+
+  # ─────────────────────────────────────────────────────────────
+  # IAM ROLE FOR EC2 + ECR
+  # ─────────────────────────────────────────────────────────────
+
+  EC2ECRRole:
+    Type: AWS::IAM::Role
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      RoleName: sanarte-ec2-ecr-role
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+            Action:
+              - sts:AssumeRole
+
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly
+        - arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy
+
+  EC2InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      Roles:
+        - !Ref EC2ECRRole
+
+  # ─────────────────────────────────────────────────────────────
+  # EC2 INSTANCE
+  # ─────────────────────────────────────────────────────────────
+
+  MicroservicesEC2:
+    Type: AWS::EC2::Instance
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      InstanceType: t3.micro
+      ImageId: ami-0c02fb55956c7d316
+      IamInstanceProfile: !Ref EC2InstanceProfile
+
+      NetworkInterfaces:
+        - AssociatePublicIpAddress: true
+          DeviceIndex: 0
+          GroupSet:
+            - !Ref EC2SecurityGroup
+          SubnetId: !Ref PublicSubnet1
+
+      Tags:
+        - Key: Name
+          Value: sanarte-microservices-ec2
+
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+
+          yum update -y
+
+          amazon-linux-extras install docker -y
+
+          service docker start
+
+          usermod -a -G docker ec2-user
+
+          systemctl enable docker
+
+          aws ecr get-login-password --region ${AWS::Region} \
+          | docker login \
+          --username AWS \
+          --password-stdin ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com
+
+          docker pull ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/sanarte/gateway-service:latest
+
+          docker pull ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/sanarte/admin-products-service:latest
+
+          docker pull ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/sanarte/public-products-service:latest
+
+          docker run -d -p 8080:8080 \
+          --name gateway-service \
+          ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/sanarte/gateway-service:latest
+
+          docker run -d -p 8081:8081 \
+          --name admin-products-service \
+          ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/sanarte/admin-products-service:latest
+
+          docker run -d -p 8082:8082 \
+          --name public-products-service \
+          ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/sanarte/public-products-service:latest
+
+
+
+
+
+  # ─────────────────────────────────────────────────────────────
+  # RDS
+  # ─────────────────────────────────────────────────────────────
+
+  DBSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      DBSubnetGroupDescription: SANarte DB subnet group
+      SubnetIds:
+        - !Ref PrivateSubnet
+        - !Ref PublicSubnet2
+
+  RDSInstance:
+    Type: AWS::RDS::DBInstance
+    DeletionPolicy: Snapshot
+    UpdateReplacePolicy: Snapshot
+    Properties:
+      DBInstanceIdentifier: sanarte-db
+      DBName: sanarte_db
+      DBInstanceClass: db.t3.micro
+      Engine: postgres
+      EngineVersion: "16.3"
+      MasterUsername: sanadmin
+      MasterUserPassword: !Ref DBPassword
+      AllocatedStorage: 20
+      StorageType: gp2
+      MultiAZ: false
+      PubliclyAccessible: false
+      DBSubnetGroupName: !Ref DBSubnetGroup
+      VPCSecurityGroups:
+        - !Ref RDSSecurityGroup
+
+  # ─────────────────────────────────────────────────────────────
+  # S3 BUCKETS FRONTEND
+  # ─────────────────────────────────────────────────────────────
+
+  FrontendBucketAdmin:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      BucketName: !Sub "sanarte-admin-frontend-${AWS::AccountId}"
+
+      WebsiteConfiguration:
+        IndexDocument: index.html
+        ErrorDocument: index.html
+
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: false
+        IgnorePublicAcls: false
+        BlockPublicPolicy: false
+        RestrictPublicBuckets: false
+
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: BucketOwnerPreferred
+
+      AccessControl: PublicRead
+
+  FrontendBucketPublic:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      BucketName: !Sub "sanarte-public-frontend-${AWS::AccountId}"
+
+      WebsiteConfiguration:
+        IndexDocument: index.html
+        ErrorDocument: index.html
+
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: false
+        IgnorePublicAcls: false
+        BlockPublicPolicy: false
+        RestrictPublicBuckets: false
+
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: BucketOwnerPreferred
+
+      AccessControl: PublicRead
