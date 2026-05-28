@@ -1,0 +1,25 @@
+# Node
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Angular build cache and output
+.angular/
+dist/
+/tmp
+/out-tsc
+/bazel-out
+
+# Logs
+*.log
+/libpeerconnection.log
+
+# Coverage
+/coverage
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Package lock at root (no package.json at root level)
+/package-lock.json
