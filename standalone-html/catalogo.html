@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SANarte - Catálogo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .catalog-content {
+            max-width: 1440px;
+            margin: 0 auto;
+            padding: 64px 167.5px;
+        }
+
+        .catalog-header {
+            text-align: center;
+            margin-bottom: 48px;
+        }
+
+        .catalog-header h1 {
+            font-family: 'Playfair Display', serif;
+            font-weight: 700;
+            font-size: 48px;
+            color: var(--color-text-primary);
+            margin-bottom: 16px;
+        }
+
+        .catalog-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+        }
+
+        .loading {
+            grid-column: span 3;
+            text-align: center;
+            padding: 40px;
+            font-size: 18px;
+            color: var(--color-text-secondary);
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <a href="index.html" class="logo">SANarte</a>
+            <nav class="nav">
+                <a href="catalogo.html" class="nav-link active">CATÁLOGO</a>
+                <a href="index.html" class="nav-link">CATEGORÍAS</a>
+                <a href="#" class="nav-link">CONTACTO</a>
+            </nav>
+            <button class="cart-btn">
+                <svg width="16" height="20" viewBox="0 0 16 20" fill="none">
+                    <path d="M0 20L1.5 6H14.5L16 20H0ZM8 0C9.06087 0 10.0783 0.421427 10.8284 1.17157C11.5786 1.92172 12 2.93913 12 4H14C14 2.4087 13.3679 0.88258 12.2426 -0.242641C11.1174 -1.36786 9.59131 -2 8 -2C6.40869 -2 4.88258 -1.36786 3.75736 -0.242641C2.63214 0.88258 2 2.4087 2 4H4C4 2.93913 4.42143 1.92172 5.17157 1.17157C5.92172 0.421427 6.93913 0 8 0Z" fill="#874D32"/>
+                </svg>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="catalog-content">
+        <div class="catalog-header">
+            <h1 id="catalogTitle">Catálogo de Productos</h1>
+        </div>
+
+        <div class="catalog-grid" id="catalogGrid">
+            <div class="loading">Cargando productos...</div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-container">
+            <!-- Footer content -->
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+    <script src="catalogo.js"></script>
+</body>
+</html>
