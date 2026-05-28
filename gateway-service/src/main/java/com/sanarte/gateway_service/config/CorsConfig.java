@@ -1,5 +1,6 @@
 package com.sanarte.gateway_service.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -8,37 +9,38 @@ import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
 
 import org.springframework.web.cors.reactive.CorsWebFilter;
 
+import java.util.Arrays;
 import java.util.List;
 
 @Configuration
 public class CorsConfig {
 
-    @Bean
-    public CorsWebFilter corsWebFilter() {
+        @Value("${cors.allowed.origins:http://localhost:4200,http://localhost:4201}")
+        private String allowedOriginsStr;
 
-        CorsConfiguration config = new CorsConfiguration();
+        @Bean
+        public CorsWebFilter corsWebFilter() {
 
-        config.setAllowedOrigins(List.of(
-                "http://localhost:4201"
-        ));
+                CorsConfiguration config = new CorsConfiguration();
 
-        config.setAllowedMethods(List.of(
-                "GET",
-                "POST",
-                "PUT",
-                "DELETE",
-                "OPTIONS"
-        ));
+                List<String> origins = Arrays.asList(allowedOriginsStr.split(","));
+                config.setAllowedOrigins(origins);
 
-        config.setAllowedHeaders(List.of("*"));
+                config.setAllowedMethods(List.of(
+                                "GET",
+                                "POST",
+                                "PUT",
+                                "DELETE",
+                                "OPTIONS"));
 
-        config.setAllowCredentials(true);
+                config.setAllowedHeaders(List.of("*"));
 
-        UrlBasedCorsConfigurationSource source =
-                new UrlBasedCorsConfigurationSource();
+                config.setAllowCredentials(true);
 
-        source.registerCorsConfiguration("/**", config);
+                UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
 
-        return new CorsWebFilter(source);
-    }
+                source.registerCorsConfiguration("/**", config);
+
+                return new CorsWebFilter(source);
+        }
 }
