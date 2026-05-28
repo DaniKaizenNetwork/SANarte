@@ -1,0 +1,56 @@
+<footer class="footer">
+  <div class="footer__main">
+    <div class="container footer__grid">
+
+      <div class="footer__brand">
+        <p class="footer__logo">SANarte</p>
+        <p class="footer__tagline">
+          Elevando lo artesanal tradicional al mundo digital,
+          conectando artesanos con amantes del buen gusto.
+        </p>
+      </div>
+
+      <div class="footer__col">
+        <h4 class="footer__col-title">Enlaces</h4>
+        <ul class="footer__col-list">
+          <li><a href="#">Privacidad</a></li>
+          <li><a href="#">Términos</a></li>
+          <li><a href="#">Envío</a></li>
+          <li><a href="#">Sostenibilidad</a></li>
+        </ul>
+      </div>
+
+      <div class="footer__col">
+        <h4 class="footer__col-title">Navegar</h4>
+        <ul class="footer__col-list">
+          <li><a routerLink="/catalogo">Catálogo</a></li>
+          <li><a routerLink="/categorias">Categorías</a></li>
+          <li><a href="mailto:info@sanarte.com">Contacto</a></li>
+        </ul>
+      </div>
+
+      <div class="footer__col footer__newsletter">
+        <h4 class="footer__col-title">Boletín</h4>
+        <p class="footer__newsletter-desc">
+          Únete para novedades exclusivas y acceso anticipado.
+        </p>
+        <div class="footer__newsletter-form">
+          <input
+            type="email"
+            placeholder="tu@email.com"
+            class="footer__newsletter-input"
+            aria-label="Correo electrónico"
+          />
+          <button type="button" class="footer__newsletter-btn">→</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="footer__bottom">
+    <div class="container footer__bottom-inner">
+      <span>© {{ year }} SANarte Premium. Todos los derechos reservados.</span>
+    </div>
+  </div>
+</footer>

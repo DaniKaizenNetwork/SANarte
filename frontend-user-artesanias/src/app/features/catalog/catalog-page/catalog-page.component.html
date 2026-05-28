@@ -1,0 +1,175 @@
+<section class="catalog">
+  <div class="container">
+
+    <!-- Header -->
+    <header class="catalog__header">
+      <div>
+        <h1 class="catalog__title">Colección Actual</h1>
+        <p class="catalog__subtitle">
+          Piezas únicas elaboradas con técnicas tradicionales. Cada objeto cuenta
+          una historia de dedicación y maestría artesanal.
+        </p>
+      </div>
+    </header>
+
+    <!-- Filter bar -->
+    <div class="catalog__filter-bar">
+
+      <div class="catalog__chips">
+
+        @if (selectedCategory(); as cat) {
+          <span class="chip chip--active">
+            {{ cat.nombre }}
+            <button
+              class="chip__remove"
+              (click)="clearCategory()"
+              aria-label="Quitar filtro de categoría"
+            >
+              <lucide-icon [img]="closeIcon" size="13" strokeWidth="2.5" />
+            </button>
+          </span>
+        }
+
+        @if (sortOrder(); as order) {
+          <span class="chip chip--active">
+            {{ getSortLabel(order) }}
+            <button
+              class="chip__remove"
+              (click)="clearSort()"
+              aria-label="Quitar filtro de precio"
+            >
+              <lucide-icon [img]="closeIcon" size="13" strokeWidth="2.5" />
+            </button>
+          </span>
+        }
+
+        @if (activeFiltersCount() === 0) {
+          <span class="catalog__no-filters">Todos los productos</span>
+        }
+
+      </div>
+
+      <div class="catalog__filter-actions">
+
+        <!-- Category filter buttons -->
+        @for (cat of categories(); track cat.idCategoria) {
+          <button
+            class="catalog__cat-btn"
+            [class.catalog__cat-btn--active]="selectedCategoryId() === cat.idCategoria"
+            (click)="selectCategory(cat.idCategoria)"
+          >
+            {{ cat.nombre }}
+          </button>
+        }
+
+        <!-- Sort -->
+        <div class="catalog__sort-wrap">
+          <button class="btn btn-outline catalog__filter-btn" (click)="toggleFilterPanel()">
+            <lucide-icon [img]="filterIcon" size="17" strokeWidth="2" />
+            Filtros
+            @if (activeFiltersCount() > 0) {
+              <span class="catalog__filter-badge">{{ activeFiltersCount() }}</span>
+            }
+          </button>
+
+          @if (showFilterPanel()) {
+            <div class="catalog__sort-panel">
+              <p class="catalog__sort-title">Ordenar por precio</p>
+              <button
+                class="catalog__sort-opt"
+                [class.catalog__sort-opt--active]="sortOrder() === 'asc'"
+                (click)="setSortOrder('asc')"
+              >
+                Menor a Mayor
+              </button>
+              <button
+                class="catalog__sort-opt"
+                [class.catalog__sort-opt--active]="sortOrder() === 'desc'"
+                (click)="setSortOrder('desc')"
+              >
+                Mayor a Menor
+              </button>
+              @if (sortOrder() !== null) {
+                <button class="catalog__sort-opt catalog__sort-opt--clear" (click)="setSortOrder(null)">
+                  Sin ordenar
+                </button>
+              }
+            </div>
+          }
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Error -->
+    @if (error()) {
+      <p class="catalog__error" role="alert">{{ error() }}</p>
+    }
+
+    <!-- Loading -->
+    @if (loading()) {
+      <div class="catalog__loading" aria-live="polite">
+        <div class="catalog__spinner"></div>
+        <span>Cargando colección...</span>
+      </div>
+    } @else {
+
+      <!-- Grid -->
+      @if (visibleProducts().length > 0) {
+
+        <div class="catalog__grid">
+          @for (product of visibleProducts(); track product.idProducto) {
+
+            <a
+              class="product-card"
+              [routerLink]="['/productos', product.idProducto]"
+            >
+              <div class="product-card__image">
+                <img
+                  [src]="getProductImage(product)"
+                  [alt]="product.nombre"
+                  loading="lazy"
+                />
+                @if (product.estado === 'AGOTADO') {
+                  <span class="product-card__badge product-card__badge--sold-out">
+                    Agotado
+                  </span>
+                }
+              </div>
+
+              <div class="product-card__body">
+                <span class="product-card__category">
+                  {{ product.categoria.nombre }}
+                </span>
+                <h3 class="product-card__name">{{ product.nombre }}</h3>
+                <p class="product-card__price">
+                  {{ product.precio | currency:'USD':'symbol':'1.0-0' }}
+                </p>
+              </div>
+            </a>
+
+          }
+        </div>
+
+        <!-- Load more -->
+        @if (hasMore()) {
+          <div class="catalog__load-more">
+            <button class="btn btn-primary" (click)="loadMore()">
+              Cargar más piezas
+            </button>
+          </div>
+        }
+
+      } @else {
+        <div class="catalog__empty">
+          <p>No se encontraron productos para esta selección.</p>
+          <button class="btn btn-outline" (click)="clearCategory()">
+            Ver todos los productos
+          </button>
+        </div>
+      }
+
+    }
+
+  </div>
+</section>

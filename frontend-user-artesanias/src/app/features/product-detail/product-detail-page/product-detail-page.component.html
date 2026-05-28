@@ -1,0 +1,124 @@
+<div class="detail-page">
+  <div class="container">
+
+    <!-- Breadcrumb -->
+    <nav class="breadcrumb" aria-label="Navegación">
+      <a routerLink="/catalogo" class="breadcrumb__link">
+        <lucide-icon [img]="arrowLeftIcon" size="16" strokeWidth="2" />
+        Catálogo
+      </a>
+      @if (product()) {
+        <span class="breadcrumb__sep">/</span>
+        <span class="breadcrumb__current">{{ product()!.nombre }}</span>
+      }
+    </nav>
+
+    @if (loading()) {
+      <div class="detail-page__loading">
+        <div class="detail-page__spinner"></div>
+        <span>Cargando producto...</span>
+      </div>
+    }
+
+    @if (error()) {
+      <div class="detail-page__error">
+        <p>{{ error() }}</p>
+        <a routerLink="/catalogo" class="btn btn-outline">Volver al catálogo</a>
+      </div>
+    }
+
+    @if (product(); as p) {
+
+      <div class="detail-layout">
+
+        <!-- Left: image -->
+        <div class="detail-layout__image-col">
+          <div class="detail-img">
+            <img
+              [src]="productImage()"
+              [alt]="p.nombre"
+              class="detail-img__main"
+            />
+            @if (p.estado === 'AGOTADO') {
+              <span class="detail-img__badge">Agotado</span>
+            }
+          </div>
+        </div>
+
+        <!-- Right: info -->
+        <div class="detail-layout__info-col">
+
+          <span class="detail-info__category">{{ p.categoria.nombre }}</span>
+
+          <h1 class="detail-info__name">{{ p.nombre }}</h1>
+
+          <p class="detail-info__price">
+            {{ p.precio | currency:'USD':'symbol':'1.2-2' }} USD
+          </p>
+
+          <p class="detail-info__description">{{ p.detalle }}</p>
+
+          <dl class="detail-info__attrs">
+            <div class="detail-info__attr">
+              <dt>Material</dt>
+              <dd>{{ p.categoria.nombre }}</dd>
+            </div>
+            <div class="detail-info__attr">
+              <dt>Disponibilidad</dt>
+              <dd [class.detail-info__attr-sold-out]="p.estado === 'AGOTADO'">
+                {{ p.estado === 'DISPONIBLE' ? 'En stock' : 'Agotado' }}
+              </dd>
+            </div>
+            <div class="detail-info__attr">
+              <dt>Tipo</dt>
+              <dd>Artesanía única</dd>
+            </div>
+          </dl>
+
+          <div class="detail-info__actions">
+            <button class="btn btn-primary detail-info__cta">
+              <lucide-icon [img]="messageIcon" size="18" strokeWidth="2" />
+              Consultar por esta pieza
+            </button>
+            <a routerLink="/catalogo" class="btn btn-outline">
+              Ver más piezas
+            </a>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Related products -->
+      @if (relatedProducts().length > 0) {
+        <section class="related">
+          <h2 class="related__title">Obras Relacionadas</h2>
+          <div class="related__grid">
+            @for (rel of relatedProducts(); track rel.idProducto) {
+              <a
+                class="related-card"
+                [routerLink]="['/productos', rel.idProducto]"
+              >
+                <div class="related-card__image">
+                  <img
+                    [src]="getProductImage(rel)"
+                    [alt]="rel.nombre"
+                    loading="lazy"
+                  />
+                </div>
+                <div class="related-card__body">
+                  <span class="related-card__category">{{ rel.categoria.nombre }}</span>
+                  <p class="related-card__name">{{ rel.nombre }}</p>
+                  <p class="related-card__price">
+                    {{ rel.precio | currency:'USD':'symbol':'1.0-0' }}
+                  </p>
+                </div>
+              </a>
+            }
+          </div>
+        </section>
+      }
+
+    }
+
+  </div>
+</div>

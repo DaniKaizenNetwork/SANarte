@@ -1,0 +1,113 @@
+.navbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  height: var(--navbar-height);
+}
+
+.navbar__inner {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2rem;
+}
+
+.navbar__logo {
+  font-family: var(--font-serif);
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  letter-spacing: -0.02em;
+  flex-shrink: 0;
+}
+
+.navbar__links {
+  display: flex;
+  align-items: center;
+  gap: 2.5rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+
+  a {
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+    transition: color 0.2s ease;
+    padding-bottom: 2px;
+    border-bottom: 1.5px solid transparent;
+
+    &:hover {
+      color: var(--color-text);
+    }
+
+    &.navbar__link--active {
+      color: var(--color-text);
+      border-bottom-color: var(--color-primary);
+    }
+  }
+}
+
+.navbar__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.navbar__icon-btn {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--color-text);
+  transition: background 0.2s ease, color 0.2s ease;
+  cursor: pointer;
+
+  &:hover {
+    background: var(--color-chip-bg);
+  }
+}
+
+.navbar__burger {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .navbar__burger {
+    display: grid;
+  }
+
+  .navbar__links {
+    display: none;
+    position: absolute;
+    top: var(--navbar-height);
+    left: 0;
+    right: 0;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0;
+    background: var(--color-surface);
+    border-bottom: 1px solid var(--color-border);
+    padding: 1rem 0;
+
+    &--open {
+      display: flex;
+    }
+
+    li {
+      width: 100%;
+    }
+
+    a {
+      display: block;
+      padding: 0.85rem 2rem;
+      font-size: 0.9rem;
+    }
+  }
+}

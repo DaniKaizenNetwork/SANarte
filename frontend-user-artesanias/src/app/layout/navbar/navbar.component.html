@@ -1,0 +1,49 @@
+<nav class="navbar">
+  <div class="navbar__inner container">
+
+    <a class="navbar__logo" routerLink="/catalogo" (click)="closeMenu()">
+      SANarte
+    </a>
+
+    <ul class="navbar__links" [class.navbar__links--open]="menuOpen()">
+      <li>
+        <a
+          routerLink="/catalogo"
+          routerLinkActive="navbar__link--active"
+          (click)="closeMenu()"
+        >
+          Catálogo
+        </a>
+      </li>
+      <li>
+        <a
+          routerLink="/categorias"
+          routerLinkActive="navbar__link--active"
+          (click)="closeMenu()"
+        >
+          Categorías
+        </a>
+      </li>
+      <li>
+        <a href="mailto:info@sanarte.com" (click)="closeMenu()">Contacto</a>
+      </li>
+    </ul>
+
+    <div class="navbar__actions">
+      <button class="navbar__icon-btn" aria-label="Buscar">
+        <lucide-icon [img]="searchIcon" size="20" strokeWidth="1.8" />
+      </button>
+      <button class="navbar__icon-btn" aria-label="Carrito">
+        <lucide-icon [img]="bagIcon" size="20" strokeWidth="1.8" />
+      </button>
+      <button
+        class="navbar__icon-btn navbar__burger"
+        [attr.aria-label]="menuOpen() ? 'Cerrar menú' : 'Abrir menú'"
+        (click)="toggleMenu()"
+      >
+        <lucide-icon [img]="menuOpen() ? closeIcon : menuIcon" size="22" strokeWidth="1.8" />
+      </button>
+    </div>
+
+  </div>
+</nav>

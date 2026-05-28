@@ -1,0 +1,57 @@
+<section class="categories">
+  <div class="container">
+
+    <header class="categories__header">
+      <h1 class="categories__title">Explora Nuestras<br>Colecciones</h1>
+      <p class="categories__subtitle">
+        Descubre la maestría y tradición detrás de cada pieza única, agrupada por
+        materiales y técnicas artesanales.
+      </p>
+    </header>
+
+    @if (error()) {
+      <p class="categories__error" role="alert">{{ error() }}</p>
+    }
+
+    @if (loading()) {
+      <div class="categories__loading">
+        <div class="categories__spinner"></div>
+        <span>Cargando categorías...</span>
+      </div>
+    } @else {
+
+      @if (categories().length > 0) {
+        <div class="categories__grid">
+
+          @for (cat of categories(); track cat.idCategoria; let i = $index) {
+            <a
+              class="cat-card"
+              [routerLink]="['/catalogo']"
+              [queryParams]="{ categoria: cat.idCategoria }"
+              [class.cat-card--wide]="i === 0 || (categories().length % 2 !== 0 && i === categories().length - 1)"
+            >
+              <div class="cat-card__image">
+                <img
+                  [src]="getCategoryImage(i)"
+                  [alt]="cat.nombre"
+                  loading="lazy"
+                />
+              </div>
+              <div class="cat-card__overlay">
+                <span class="cat-card__label">{{ cat.descripcion || 'Artesanías' }}</span>
+                <h2 class="cat-card__name">{{ cat.nombre }}</h2>
+              </div>
+            </a>
+          }
+
+        </div>
+      } @else if (!loading()) {
+        <div class="categories__empty">
+          <p>No hay categorías disponibles en este momento.</p>
+        </div>
+      }
+
+    }
+
+  </div>
+</section>
